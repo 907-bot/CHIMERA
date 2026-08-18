@@ -1,8 +1,11 @@
-"""CHIMERA FastAPI Observatory API Gateway Microservice"""
-
+import os
+from pathlib import Path
 from typing import List, Optional
+import numpy as np
 from fastapi import FastAPI, HTTPException, Query
-from pydantic import BaseModel
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+from pydantic import BaseModel, Field
 from packages.core.models import WorldConfig
 from packages.physics.engine import DeterministicEngine
 from packages.observatory.events import (
@@ -50,11 +53,14 @@ from packages.intelligence.models import (
 from packages.intelligence.controller import NeuralAgentController
 from packages.intelligence.information import EmergenceDetector
 from packages.intelligence.agent import SocialScientistAgent
+from packages.civilization.models import CivilizationSimulationResult
+from packages.civilization.civilization import ScientificCivilizationEngine
+from packages.civilization.agent import CivilizationArchivistAgent
 
 app = FastAPI(
     title="CHIMERA Scientific Observatory Gateway",
     description="Event-Sourced Universal Telemetry & Trajectory API Gateway",
-    version="0.9",
+    version="1.0",
 )
 
 
@@ -68,6 +74,7 @@ multiverse_orchestrator = MultiverseOrchestrator()
 chemist_agent = ChemistAgent()
 biologist_agent = BiologistAgent()
 social_scientist_agent = SocialScientistAgent()
+civilization_archivist = CivilizationArchivistAgent()
 
 
 class SimRunRequest(BaseModel):
@@ -87,9 +94,25 @@ class SimRunResponse(BaseModel):
     status: str
 
 
+# Mount Web Dashboard Static Assets
+web_dir = Path(__file__).parent.parent / "web"
+if web_dir.exists():
+    app.mount("/static", StaticFiles(directory=str(web_dir)), name="static")
+
+
+@app.get("/")
+@app.get("/dashboard")
+def serve_dashboard():
+    """Serve the interactive CHIMERA Scientific Observatory Web Dashboard."""
+    index_file = web_dir / "index.html"
+    if index_file.exists():
+        return FileResponse(str(index_file))
+    return {"message": "CHIMERA Scientific Observatory Gateway v1.0", "docs": "/docs"}
+
+
 @app.get("/health")
 def health_check():
-    return {"status": "ok", "version": "0.2a", "service": "chimera-observatory-api"}
+    return {"status": "ok", "version": "1.0", "service": "chimera-observatory-api"}
 
 
 @app.post("/api/v1/sim/run", response_model=SimRunResponse)
@@ -429,20 +452,24 @@ def analyze_chaos(config: Optional[WorldConfig] = None, steps: int = 150, epsilo
     return lyap_result.model_dump()
 
 
+class BranchTimelineRequest(BaseModel):
+    base_config: WorldConfig = Field(default_factory=WorldConfig)
+    total_steps: int = 100
+    branch_specs: List[WorldBranchSpec] = Field(default_factory=list)
+
+
 @app.post("/api/v1/multiverse/branch")
 def branch_checkpoint_timeline(
-    base_config: WorldConfig,
-    total_steps: int = 100,
-    branch_specs: List[WorldBranchSpec] = Query(default=[]),
+    req: BranchTimelineRequest,
 ):
     """Branch multiple child timelines from a parent checkpoint at step k."""
-    if not branch_specs:
+    if not req.branch_specs:
         raise HTTPException(status_code=400, detail="Must provide at least one WorldBranchSpec.")
     
     timelines = multiverse_orchestrator.run_family_d(
-        base_config=base_config,
-        total_steps=total_steps,
-        branch_specs=branch_specs,
+        base_config=req.base_config,
+        total_steps=req.total_steps,
+        branch_specs=req.branch_specs,
     )
     
     summary = {
@@ -571,6 +598,35 @@ def evaluate_collective_emergence(
     
     report = social_scientist_agent.analyze_social_dynamics(sim_res)
     return report.model_dump()
+
+
+# ---------------------------------------------------------------------------
+# Phases 9 & 10: Scientific Civilization Routes (CHIMERA v1.0)
+# ---------------------------------------------------------------------------
+
+@app.post("/api/v1/civilization/simulate")
+def simulate_scientific_civilization(
+    generations: int = 5,
+    num_observers: int = 5,
+    ground_truth_k: float = 3.0,
+):
+    """Simulate an in-world scientific civilization conducting nested experiments and peer review."""
+    engine = ScientificCivilizationEngine(seed=42, num_observers=num_observers)
+    sim_result = engine.run_civilization(generations=generations, ground_truth_k=ground_truth_k)
+    audit = civilization_archivist.audit_civilization(sim_result)
+    
+    return {
+        "civilization_id": sim_result.civilization_id,
+        "total_generations": sim_result.total_generations,
+        "active_observers": len(sim_result.observers),
+        "paradigm_count": sim_result.paradigm_count,
+        "meta_accuracy": sim_result.accuracy_vs_ground_truth,
+        "archivist_audit": audit.model_dump(),
+        "accepted_theories": [
+            t.model_dump() for t in sim_result.archived_theories
+            if t.status == "ACCEPTED_PARADIGM"
+        ],
+    }
 
 
 if __name__ == "__main__":

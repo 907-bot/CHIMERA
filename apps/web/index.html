@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CHIMERA — Autonomous Scientific Observatory & Multiverse Engine</title>
+  <meta name="description" content="Silicon Particle Collider & Autonomous AI Scientific Civilization Engine">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <!-- Header & Navigation -->
+  <header>
+    <div class="logo-container">
+      <div class="logo-badge">CHIMERA v1.0</div>
+      <h1 class="logo-title">Scientific Observatory & Multiverse Engine</h1>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs" role="tablist">
+      <button class="tab-btn active" data-tab="tab-physics" id="tab-btn-physics">
+        <span>🪐</span> Physics Multiverse
+      </button>
+      <button class="tab-btn" data-tab="tab-debate" id="tab-btn-debate">
+        <span>🏛️</span> Adversarial Society
+      </button>
+      <button class="tab-btn" data-tab="tab-discovery" id="tab-btn-discovery">
+        <span>📐</span> Equation Discovery
+      </button>
+      <button class="tab-btn" data-tab="tab-chemistry" id="tab-btn-chemistry">
+        <span>🧪</span> Reaction Chemistry
+      </button>
+      <button class="tab-btn" data-tab="tab-alife" id="tab-btn-alife">
+        <span>🧬</span> Artificial Life & Civ
+      </button>
+    </nav>
+
+    <!-- Real-time Status -->
+    <div class="system-status">
+      <div class="pulse-dot"></div>
+      <span id="system-status-text">OBSERVATORY LIVE (121/121 BENCHMARKS PASSED)</span>
+    </div>
+  </header>
+
+  <!-- Main Viewports -->
+  <main>
+
+    <!-- TAB 1: PHYSICS & MULTIVERSE SIMULATION -->
+    <section class="tab-content active" id="tab-physics">
+      <div class="grid-dashboard">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title"><span>🪐</span> Deterministic Universe Viewport</h2>
+            <div class="badge" id="integrator-badge">Symplectic Verlet | dt=0.01s</div>
+          </div>
+          
+          <div class="canvas-container">
+            <canvas id="physics-canvas"></canvas>
+            <div class="canvas-overlay">
+              <div class="telemetry-chip" id="chip-time">t = 0.00s</div>
+              <div class="telemetry-chip" id="chip-particles">Particles: 12</div>
+              <div class="telemetry-chip" id="chip-energy">Energy: 48.241 J (Drift: 0.004%)</div>
+            </div>
+          </div>
+
+          <!-- Controls Bar -->
+          <div class="controls-bar">
+            <button class="btn" id="btn-play-pause"><span>▶</span> Play</button>
+            <button class="btn btn-secondary" id="btn-reset-sim"><span>↺</span> Reset</button>
+            <button class="btn btn-secondary" id="btn-branch-timeline"><span>🌱</span> Fork Branch</button>
+            <input type="range" class="scrubber-slider" id="timeline-scrubber" min="0" max="500" value="0">
+            <span style="font-family: var(--font-mono); font-size: 0.85rem;" id="scrubber-step">Step 0/500</span>
+          </div>
+        </div>
+
+        <!-- Sidebar: Multiverse Matrix -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title"><span>🌌</span> Multiverse Invariant Inspector</h2>
+            <div class="badge">500 Parallel Worlds</div>
+          </div>
+
+          <div style="margin-bottom: 1rem;">
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+              Statistical evaluation distinguishing Universal Laws from Historical Accidents:
+            </p>
+            <div id="invariants-list" style="display: flex; flex-direction: column; gap: 0.5rem;">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <button class="btn" style="width: 100%;" id="btn-run-multiverse-family">
+            <span>⚡</span> Execute 500-World Family A
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: ADVERSARIAL SCIENTIFIC SOCIETY -->
+    <section class="tab-content" id="tab-debate">
+      <div class="grid-2col">
+        <!-- Debate Courtroom -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title"><span>🏛️</span> Scientific Courtroom & Debate Arena</h2>
+            <div class="badge" id="debate-status-badge">AWAITING HYPOTHESIS</div>
+          </div>
+
+          <div id="podium-container">
+            <div class="agent-podium podium-bull">
+              <div class="agent-title">
+                <span style="color: var(--accent-emerald);">🐂 Bull Agent (Defense)</span>
+                <span class="badge" id="bull-confidence">Confidence: 99.2%</span>
+              </div>
+              <div class="agent-quote" id="bull-quote">
+                "Hypothesis achieves R²=0.9992 on unobserved steps. Odd-power displacement terms confirm strict energy conservation."
+              </div>
+            </div>
+
+            <div class="agent-podium podium-bear">
+              <div class="agent-title">
+                <span style="color: var(--accent-rose);">🐻 Bear Agent (Prosecution)</span>
+                <span class="badge" id="bear-doubt">Doubt: 10.0%</span>
+              </div>
+              <div class="agent-quote" id="bear-quote">
+                "Single-trajectory fitting. Law must be stress-tested against non-linear amplitude regimes."
+              </div>
+            </div>
+
+            <div class="agent-podium podium-skeptic">
+              <div class="agent-title">
+                <span style="color: var(--accent-amber);">🧐 Skeptic Agent (Intervention Design)</span>
+                <span class="badge">Falsification Spec</span>
+              </div>
+              <div class="agent-quote" id="skeptic-quote">
+                "Proposed Counterfactual: 5x initial displacement stress test. Required survival R² ≥ 0.95."
+              </div>
+            </div>
+
+            <div class="agent-podium podium-arbiter">
+              <div class="agent-title">
+                <span style="color: var(--accent-purple);">⚖️ Arbiter Agent (Bayesian Verdict)</span>
+                <span class="badge" id="arbiter-verdict-badge">ACCEPTED</span>
+              </div>
+              <div class="agent-quote" id="arbiter-quote">
+                "Bayesian posterior P(correct)=0.9726. Hypothesis survived empirical counterfactual perturbation."
+              </div>
+            </div>
+          </div>
+
+          <div class="meter-container">
+            <div class="meter-header">
+              <span>Bayesian Scientific Consensus</span>
+              <span id="consensus-pct">97.3%</span>
+            </div>
+            <div class="meter-track">
+              <div class="meter-fill" id="consensus-fill" style="width: 97.3%;"></div>
+            </div>
+          </div>
+
+          <button class="btn" style="width: 100%; margin-top: 1rem;" id="btn-trigger-debate">
+            <span>⚔️</span> Launch Full Adversarial Debate
+          </button>
+        </div>
+
+        <!-- Hypothesis Lineage DAG -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title"><span>🌳</span> Immutable Provenance DAG</h2>
+            <div class="badge">NetworkX Graph</div>
+          </div>
+          <div class="canvas-container" style="height: 420px;">
+            <canvas id="dag-canvas"></canvas>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.75rem;">
+            * Per AGENTS.md Rule 6: Failed hypotheses and falsified experiments are permanently retained in history.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: EQUATION DISCOVERY LAB -->
+    <section class="tab-content" id="tab-discovery">
+      <div class="grid-2col">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title"><span>📐</span> SINDy Symbolic Discovery Engine</h2>
+            <div class="badge">Zero Token Cost ($0)</div>
+          </div>
+
+          <div class="formula-box" id="discovered-formula">
+            F = -2.9984 · x
+          </div>
+
+          <div style="font-family: var(--font-mono); font-size: 0.85rem; background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+            <div>Target World : Harmonic Spring</div>
+            <div>Identified Law : Hooke's Law (Linear Restoring)</div>
+            <div>Coefficient Error : <span style="color: var(--accent-emerald);">0.05% vs Ground Truth (k=3.0)</span></div>
+            <div>Predictive R² : <span style="color: var(--accent-cyan);">0.9992</span></div>
+            <div>Computation Cost : <span style="color: var(--accent-purple);">$0.00 (Vectorized STLSQ)</span></div>
+          </div>
+
+          <button class="btn" style="width: 100%;" id="btn-run-discovery">
+            <span>🔬</span> Run Blind Equation Discovery
+          </button>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title"><span>📈</span> Prediction vs. Ground Truth</h2>
+            <div class="badge">Trajectory Overlay</div>
+          </div>
+          <div class="canvas-container" style="height: 380px;">
+            <canvas id="chart-discovery-canvas"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: REACTION-NETWORK CHEMISTRY -->
+    <section class="tab-content" id="tab-chemistry">
+      <div class="grid-2col">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title"><span>🧪</span> Brusselator Limit-Cycle Oscillator</h2>
+            <div class="badge">RK4 Mass-Action</div>
+          </div>
+          <div class="canvas-container" style="height: 380px;">
+            <canvas id="chem-phase-canvas"></canvas>
+          </div>
+          <div class="controls-bar">
+            <button class="btn" id="btn-run-chem"><span>▶</span> Run Kinetics Simulation</button>
+            <span style="font-family: var(--font-mono); font-size: 0.85rem;" id="chem-period-badge">Oscillation Period: T = 7.02s</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title"><span>🔬</span> Chemist Agent Stoichiometric Audit</h2>
+            <div class="badge">Hypergraph Nullspace</div>
+          </div>
+          <div id="chem-audit-box" style="font-family: var(--font-mono); font-size: 0.85rem; background: rgba(0,0,0,0.3); padding: 1.25rem; border-radius: 8px; line-height: 1.6;">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: ARTIFICIAL LIFE & SCIENTIFIC CIVILIZATION -->
+    <section class="tab-content" id="tab-alife">
+      <div class="grid-2col">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title"><span>🧬</span> Evolutionary Dynamics & Speciation</h2>
+            <div class="badge">Genomes & Bioenergetics</div>
+          </div>
+          <div class="canvas-container" style="height: 380px;">
+            <canvas id="alife-canvas"></canvas>
+          </div>
+          <div class="controls-bar">
+            <button class="btn" id="btn-run-alife"><span>▶</span> Simulate Evolution (100 Steps)</button>
+            <span style="font-family: var(--font-mono); font-size: 0.85rem;" id="alife-pop-badge">Active Organisms: 18</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title"><span>🏛️</span> Scientific Civilization Academy</h2>
+            <div class="badge">Nested Observers</div>
+          </div>
+          <div id="civ-report-box" style="font-family: var(--font-mono); font-size: 0.85rem; background: rgba(0,0,0,0.3); padding: 1.25rem; border-radius: 8px; line-height: 1.6;">
+            <!-- Dynamically populated -->
+          </div>
+          <button class="btn" style="width: 100%; margin-top: 1rem;" id="btn-run-civ">
+            <span>📜</span> Simulate In-World Academy (10 Generations)
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
