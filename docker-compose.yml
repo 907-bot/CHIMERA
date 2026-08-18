@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  chimera-sim-engine:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: python -m apps.cli.main run-sim --seed 42 --steps 1000
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  redis-event-bus:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
