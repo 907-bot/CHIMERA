@@ -19,11 +19,20 @@ from packages.symbolic.discovery_engine import DiscoveryEngine
 from packages.symbolic.registry import HypothesisRegistry
 from packages.agents.debate_engine import DebateEngine
 from packages.agents.hypothesis_graph import HypothesisGraph
+from packages.multiverse.models import (
+    WorldFamilyType,
+    WorldFamilySpec,
+    WorldBranchSpec,
+    MultiverseBatchResult,
+    LyapunovResult,
+    InvariantResult,
+)
+from packages.multiverse.orchestrator import MultiverseOrchestrator
 
 app = FastAPI(
     title="CHIMERA Scientific Observatory Gateway",
     description="Event-Sourced Universal Telemetry & Trajectory API Gateway",
-    version="0.3",
+    version="0.4",
 )
 
 
@@ -33,6 +42,7 @@ hypothesis_registry = HypothesisRegistry(":memory:")
 discovery_engine = DiscoveryEngine(registry=hypothesis_registry)
 hypothesis_graph = HypothesisGraph()
 debate_engine = DebateEngine(graph=hypothesis_graph)
+multiverse_orchestrator = MultiverseOrchestrator()
 
 
 class SimRunRequest(BaseModel):
@@ -366,6 +376,58 @@ def get_hypothesis_lineage(hypothesis_id: str):
     """Return the full provenance DAG for a specific hypothesis."""
     lineage = hypothesis_graph.get_hypothesis_lineage(hypothesis_id)
     return lineage
+
+
+# ---------------------------------------------------------------------------
+# Phase 5: Multiverse & Cross-World Discovery Routes (CHIMERA v0.4)
+# ---------------------------------------------------------------------------
+
+@app.post("/api/v1/multiverse/run-family")
+def run_world_family(spec: WorldFamilySpec):
+    """Execute a parallel World Family (Family A, B, C, or D) and detect invariants/chaos."""
+    try:
+        result = multiverse_orchestrator.run_family(spec)
+        return result.model_dump()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/api/v1/multiverse/chaos-analysis")
+def analyze_chaos(config: Optional[WorldConfig] = None, steps: int = 150, epsilon: float = 1e-8):
+    """Run Lyapunov trajectory divergence analysis on a base world configuration."""
+    cfg = config or WorldConfig()
+    lyap_result = multiverse_orchestrator.chaos_calculator.calculate_lyapunov(
+        base_config=cfg,
+        steps=steps,
+        epsilon=epsilon,
+    )
+    return lyap_result.model_dump()
+
+
+@app.post("/api/v1/multiverse/branch")
+def branch_checkpoint_timeline(
+    base_config: WorldConfig,
+    total_steps: int = 100,
+    branch_specs: List[WorldBranchSpec] = Query(default=[]),
+):
+    """Branch multiple child timelines from a parent checkpoint at step k."""
+    if not branch_specs:
+        raise HTTPException(status_code=400, detail="Must provide at least one WorldBranchSpec.")
+    
+    timelines = multiverse_orchestrator.run_family_d(
+        base_config=base_config,
+        total_steps=total_steps,
+        branch_specs=branch_specs,
+    )
+    
+    summary = {
+        w_id: {
+            "total_steps": len(traj),
+            "final_particle_count": len(traj[-1].particles) if traj else 0,
+        }
+        for w_id, traj in timelines.items()
+    }
+    return {"parent_world_id": base_config.world_id, "timelines": summary}
 
 
 if __name__ == "__main__":
