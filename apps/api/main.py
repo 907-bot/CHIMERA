@@ -17,11 +17,13 @@ from packages.physics.energy import EnergyMetrics
 from packages.symbolic.benchmark_worlds import generate_blind_data, ALL_BENCHMARKS
 from packages.symbolic.discovery_engine import DiscoveryEngine
 from packages.symbolic.registry import HypothesisRegistry
+from packages.agents.debate_engine import DebateEngine
+from packages.agents.hypothesis_graph import HypothesisGraph
 
 app = FastAPI(
     title="CHIMERA Scientific Observatory Gateway",
     description="Event-Sourced Universal Telemetry & Trajectory API Gateway",
-    version="0.2b",
+    version="0.3",
 )
 
 
@@ -29,6 +31,8 @@ app = FastAPI(
 storage = ObservatoryStorageEngine(":memory:")
 hypothesis_registry = HypothesisRegistry(":memory:")
 discovery_engine = DiscoveryEngine(registry=hypothesis_registry)
+hypothesis_graph = HypothesisGraph()
+debate_engine = DebateEngine(graph=hypothesis_graph)
 
 
 class SimRunRequest(BaseModel):
@@ -290,6 +294,78 @@ def list_hypotheses(world_name: str, status: Optional[str] = None):
             for h in hyps
         ],
     }
+
+
+# ---------------------------------------------------------------------------
+# Phase 4: Adversarial Scientific Society Routes (CHIMERA v0.3)
+# ---------------------------------------------------------------------------
+
+@app.post("/api/v1/debate/{world_name}")
+def run_full_debate(world_name: str):
+    """Run full adversarial debate pipeline on the best discovered hypothesis.
+
+    Pipeline: Discover (SINDy) → Bull → Bear → Skeptic → Intervention → Arbiter.
+    Returns the complete DebateRecord with all arguments and the final verdict.
+    """
+    if world_name not in ALL_BENCHMARKS:
+        raise HTTPException(status_code=404, detail=f"Unknown world '{world_name}'")
+
+    # Step 1: Discover hypothesis via SINDy
+    disc_result = discovery_engine.run_discovery(world_name)
+    if not disc_result.best_hypothesis:
+        raise HTTPException(status_code=500, detail="Discovery produced no hypothesis")
+
+    hyp = disc_result.best_hypothesis
+
+    # Step 2: Run full adversarial debate
+    record = debate_engine.debate(hyp)
+
+    return {
+        "world_name": world_name,
+        "hypothesis": {
+            "id": hyp.id,
+            "equation": hyp.candidate_equation,
+            "r_squared": hyp.metrics.r_squared if hyp.metrics else None,
+        },
+        "bull": {
+            "confidence": record.bull_argument.confidence_score,
+            "strongest_claim": record.bull_argument.strongest_claim,
+        },
+        "bear": {
+            "doubt": record.bear_argument.doubt_score,
+            "critical_flaw": record.bear_argument.critical_flaw,
+        },
+        "experiment": {
+            "name": record.skeptic_experiment.experiment_name,
+            "r_squared_on_perturbed": record.experiment_result.r_squared_on_perturbed,
+            "survived": record.experiment_result.survived,
+            "interpretation": record.experiment_result.interpretation,
+        },
+        "verdict": {
+            "decision": record.arbiter_verdict.verdict,
+            "confidence": record.arbiter_verdict.bayesian_confidence,
+            "reasoning": record.arbiter_verdict.reasoning,
+        },
+        "final_status": record.final_status,
+        "duration_seconds": record.duration_seconds,
+    }
+
+
+@app.get("/api/v1/debate/graph/summary")
+def get_graph_summary():
+    """Return node counts for the hypothesis provenance graph."""
+    return {
+        "node_counts": hypothesis_graph.summary(),
+        "accepted": hypothesis_graph.accepted_hypotheses(),
+        "rejected": hypothesis_graph.rejected_hypotheses(),
+    }
+
+
+@app.get("/api/v1/debate/graph/lineage/{hypothesis_id}")
+def get_hypothesis_lineage(hypothesis_id: str):
+    """Return the full provenance DAG for a specific hypothesis."""
+    lineage = hypothesis_graph.get_hypothesis_lineage(hypothesis_id)
+    return lineage
 
 
 if __name__ == "__main__":
