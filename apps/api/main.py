@@ -28,11 +28,22 @@ from packages.multiverse.models import (
     InvariantResult,
 )
 from packages.multiverse.orchestrator import MultiverseOrchestrator
+from packages.chemistry.models import (
+    ChemicalSpecies,
+    Reaction,
+    ReactionNetwork,
+    ChemistryState,
+    AutocatalyticCycleResult,
+    KineticsSimulationResult,
+)
+from packages.chemistry.kinetics import MassActionKineticsSolver, BENCHMARK_NETWORKS
+from packages.chemistry.detector import AutocatalysisDetector
+from packages.chemistry.agent import ChemistAgent
 
 app = FastAPI(
     title="CHIMERA Scientific Observatory Gateway",
     description="Event-Sourced Universal Telemetry & Trajectory API Gateway",
-    version="0.4",
+    version="0.6",
 )
 
 
@@ -43,6 +54,7 @@ discovery_engine = DiscoveryEngine(registry=hypothesis_registry)
 hypothesis_graph = HypothesisGraph()
 debate_engine = DebateEngine(graph=hypothesis_graph)
 multiverse_orchestrator = MultiverseOrchestrator()
+chemist_agent = ChemistAgent()
 
 
 class SimRunRequest(BaseModel):
@@ -428,6 +440,55 @@ def branch_checkpoint_timeline(
         for w_id, traj in timelines.items()
     }
     return {"parent_world_id": base_config.world_id, "timelines": summary}
+
+
+# ---------------------------------------------------------------------------
+# Phase 6: Reaction-Network Chemistry Routes (CHIMERA v0.6)
+# ---------------------------------------------------------------------------
+
+@app.get("/api/v1/chemistry/networks/benchmark/{network_name}")
+def get_benchmark_network(network_name: str):
+    """Retrieve canonical benchmark reaction network definition (brusselator, formose, lotka_volterra)."""
+    if network_name not in BENCHMARK_NETWORKS:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Unknown benchmark network '{network_name}'. Available: {list(BENCHMARK_NETWORKS.keys())}"
+        )
+    net = BENCHMARK_NETWORKS[network_name]()
+    return net.model_dump()
+
+
+@app.post("/api/v1/chemistry/simulate")
+def simulate_reaction_network(
+    network: ReactionNetwork,
+    total_time: float = 40.0,
+    dt: float = 0.01,
+):
+    """Run deterministic mass-action kinetics simulation on a reaction network."""
+    solver = MassActionKineticsSolver(network)
+    sim_result = solver.simulate(total_time=total_time, dt=dt)
+    
+    # Run autocatalysis detector
+    detector = AutocatalysisDetector(network)
+    analysis = detector.analyze_trajectory(sim_result)
+    
+    return {
+        "network_name": network.name,
+        "time_points_count": len(sim_result.time_points),
+        "species_names": network.get_species_names(),
+        "final_concentrations": {
+            sp: sim_result.concentrations[sp][-1]
+            for sp in network.get_species_names()
+        },
+        "autocatalysis_analysis": analysis.model_dump(),
+    }
+
+
+@app.post("/api/v1/chemistry/analyze-stoichiometry")
+def analyze_stoichiometry(network: ReactionNetwork):
+    """Perform formal stoichiometric and pathway audit via ChemistAgent."""
+    report = chemist_agent.analyze_network(network)
+    return report.model_dump()
 
 
 if __name__ == "__main__":
