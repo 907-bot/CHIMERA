@@ -1,0 +1,20 @@
+[
+  "tests/scientific/test_checkpoint_restoration.py::test_checkpoint_restoration_bitwise_equality",
+  "tests/scientific/test_energy_conservation.py::test_verlet_energy_conservation",
+  "tests/scientific/test_energy_conservation.py::test_verlet_vs_euler_energy_drift",
+  "tests/scientific/test_observatory_performance.py::test_observatory_100k_query_latency",
+  "tests/scientific/test_reproducibility.py::test_bitwise_reproducibility_100_runs",
+  "tests/scientific/test_reproducibility.py::test_seed_sensitivity",
+  "tests/unit/test_core_models.py::test_particle_immutability",
+  "tests/unit/test_core_models.py::test_serialization_roundtrip",
+  "tests/unit/test_core_models.py::test_vector_division_by_zero",
+  "tests/unit/test_core_models.py::test_vector_operations",
+  "tests/unit/test_observatory.py::test_duckdb_storage_engine",
+  "tests/unit/test_observatory.py::test_event_bus_pub_sub",
+  "tests/unit/test_observatory.py::test_observation_mask_sanitization",
+  "tests/unit/test_observatory.py::test_spatial_entropy",
+  "tests/unit/test_physics_integrators.py::test_boundary_collision_reflection",
+  "tests/unit/test_physics_integrators.py::test_gravity_force_computation",
+  "tests/unit/test_physics_integrators.py::test_integrator_stepping",
+  "tests/unit/test_physics_integrators.py::test_particle_elastic_collision"
+]
