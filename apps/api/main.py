@@ -14,15 +14,21 @@ from packages.observatory.events import (
 from packages.observatory.storage import ObservatoryStorageEngine
 from packages.observatory.features import FeatureExtractor, ObservationMask, BlindObservation
 from packages.physics.energy import EnergyMetrics
+from packages.symbolic.benchmark_worlds import generate_blind_data, ALL_BENCHMARKS
+from packages.symbolic.discovery_engine import DiscoveryEngine
+from packages.symbolic.registry import HypothesisRegistry
 
 app = FastAPI(
     title="CHIMERA Scientific Observatory Gateway",
     description="Event-Sourced Universal Telemetry & Trajectory API Gateway",
-    version="0.2a",
+    version="0.2b",
 )
 
-# Global storage engine instance
+
+# Global service instances
 storage = ObservatoryStorageEngine(":memory:")
+hypothesis_registry = HypothesisRegistry(":memory:")
+discovery_engine = DiscoveryEngine(registry=hypothesis_registry)
 
 
 class SimRunRequest(BaseModel):
@@ -183,6 +189,107 @@ def get_blind_observation(world_id: str, step: int = Query(0, ge=0)):
 
     blind_obs = ObservationMask.mask_state(states[0])
     return blind_obs.model_dump()
+
+
+# ---------------------------------------------------------------------------
+# Phase 3: Symbolic Discovery Routes (CHIMERA v0.2b)
+# ---------------------------------------------------------------------------
+
+@app.get("/api/v1/benchmark/list")
+def list_benchmarks():
+    """List all available hidden-law benchmark worlds."""
+    return {
+        "benchmarks": [
+            {"name": name, "description": f"Hidden-law benchmark: {name}"}
+            for name in ALL_BENCHMARKS
+        ]
+    }
+
+
+@app.post("/api/v1/benchmark/run/{world_name}")
+def run_benchmark_world(world_name: str):
+    """Run a hidden-law benchmark world and return blind observable data only.
+
+    The response contains ONLY position, velocity, and time arrays.
+    Hidden physics parameters (k, GM, b) are NEVER included in the response.
+    """
+    if world_name not in ALL_BENCHMARKS:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Unknown benchmark world '{world_name}'. Available: {list(ALL_BENCHMARKS.keys())}"
+        )
+
+    blind_data = generate_blind_data(world_name)
+
+    # Strip numpy arrays to lists for JSON serialisation
+    serialisable = {
+        "world_name": blind_data["world_name"],
+        "num_steps": int(len(blind_data["t"])),
+        "t": blind_data["t"].tolist(),
+        "x": blind_data["x"].tolist(),
+        "v": blind_data["v"].tolist(),
+    }
+    if "a" in blind_data:
+        serialisable["a"] = blind_data["a"].tolist()
+    if "y" in blind_data:
+        serialisable["y"] = blind_data["y"].tolist()
+        serialisable["vx"] = blind_data["vx"].tolist()
+        serialisable["vy"] = blind_data["vy"].tolist()
+
+    return serialisable
+
+
+@app.post("/api/v1/symbolic/discover/{world_name}")
+def discover_hidden_law(world_name: str):
+    """Trigger the SINDy blind discovery pipeline for a benchmark world.
+
+    Laws are derived mathematically from trajectory data — nothing is hardcoded.
+    Returns the best discovered hypothesis with R², RMSE, and candidate equation.
+    """
+    if world_name not in ALL_BENCHMARKS:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Unknown benchmark world '{world_name}'."
+        )
+
+    result = discovery_engine.run_discovery(world_name)
+    best = result.best_hypothesis
+
+    return {
+        "world_name": world_name,
+        "elapsed_seconds": round(result.elapsed_seconds, 4),
+        "hypotheses_count": len(result.hypotheses),
+        "best_hypothesis": {
+            "id": best.id,
+            "solver": best.solver,
+            "candidate_equation": best.candidate_equation,
+            "status": best.status,
+            "r_squared": best.metrics.r_squared if best.metrics else None,
+            "rmse": best.metrics.rmse if best.metrics else None,
+            "parameters": best.parameters.values,
+        } if best else None,
+    }
+
+
+@app.get("/api/v1/symbolic/hypotheses/{world_name}")
+def list_hypotheses(world_name: str, status: Optional[str] = None):
+    """List all hypotheses registered for a world (including falsified — immutable)."""
+    hyps = hypothesis_registry.get_by_world(world_name, status_filter=status)
+    return {
+        "world_name": world_name,
+        "count": len(hyps),
+        "hypotheses": [
+            {
+                "id": h.id,
+                "solver": h.solver,
+                "candidate_equation": h.candidate_equation,
+                "status": h.status,
+                "r_squared": h.metrics.r_squared if h.metrics else None,
+                "created_at": h.created_at,
+            }
+            for h in hyps
+        ],
+    }
 
 
 if __name__ == "__main__":
