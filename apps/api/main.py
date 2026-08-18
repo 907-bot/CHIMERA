@@ -39,11 +39,22 @@ from packages.chemistry.models import (
 from packages.chemistry.kinetics import MassActionKineticsSolver, BENCHMARK_NETWORKS
 from packages.chemistry.detector import AutocatalysisDetector
 from packages.chemistry.agent import ChemistAgent
+from packages.alife.models import Environment, ALifeSimulationResult
+from packages.alife.evolution import EvolutionaryEngine
+from packages.alife.agent import BiologistAgent
+from packages.intelligence.models import (
+    NeuralPolicy,
+    SensoryObservation,
+    SocialSimulationResult,
+)
+from packages.intelligence.controller import NeuralAgentController
+from packages.intelligence.information import EmergenceDetector
+from packages.intelligence.agent import SocialScientistAgent
 
 app = FastAPI(
     title="CHIMERA Scientific Observatory Gateway",
     description="Event-Sourced Universal Telemetry & Trajectory API Gateway",
-    version="0.6",
+    version="0.9",
 )
 
 
@@ -55,6 +66,8 @@ hypothesis_graph = HypothesisGraph()
 debate_engine = DebateEngine(graph=hypothesis_graph)
 multiverse_orchestrator = MultiverseOrchestrator()
 chemist_agent = ChemistAgent()
+biologist_agent = BiologistAgent()
+social_scientist_agent = SocialScientistAgent()
 
 
 class SimRunRequest(BaseModel):
@@ -488,6 +501,75 @@ def simulate_reaction_network(
 def analyze_stoichiometry(network: ReactionNetwork):
     """Perform formal stoichiometric and pathway audit via ChemistAgent."""
     report = chemist_agent.analyze_network(network)
+    return report.model_dump()
+
+
+# ---------------------------------------------------------------------------
+# Phase 7: Artificial Life & Evolutionary Dynamics Routes (CHIMERA v0.7-0.8)
+# ---------------------------------------------------------------------------
+
+@app.post("/api/v1/alife/simulate")
+def simulate_artificial_life(
+    initial_population: int = 15,
+    total_steps: int = 80,
+    seed: int = 42,
+    speciation_threshold: float = 0.25,
+):
+    """Run an artificial life evolutionary simulation with speciation and metabolism."""
+    engine = EvolutionaryEngine(seed=seed, speciation_threshold=speciation_threshold)
+    sim_result = engine.run_simulation(initial_population_size=initial_population, total_steps=total_steps)
+    report = biologist_agent.analyze_simulation(sim_result)
+    
+    return {
+        "simulation_id": sim_result.simulation_id,
+        "total_steps": sim_result.total_steps,
+        "total_births": sim_result.total_births,
+        "total_deaths": sim_result.total_deaths,
+        "final_population": sim_result.final_population_size,
+        "species_count": len(sim_result.phylogenetic_tree_nodes),
+        "biologist_report": report.model_dump(),
+    }
+
+
+# ---------------------------------------------------------------------------
+# Phase 8: Embodied Intelligence & Emergence Routes (CHIMERA v0.9)
+# ---------------------------------------------------------------------------
+
+@app.post("/api/v1/intelligence/evaluate-emergence")
+def evaluate_collective_emergence(
+    num_agents: int = 10,
+    steps: int = 50,
+):
+    """Evaluate information-theoretic collective emergence (Transfer Entropy & Swarm Polarization)."""
+    detector = EmergenceDetector()
+    
+    # Generate representative swarming test trajectory
+    vel_history = []
+    sig_history = [[float(np.sin(t * 0.1))] for t in range(steps)]
+    
+    for t in range(steps):
+        heading = np.sin(t * 0.08)
+        step_vels = [
+            (float(np.cos(heading + i * 0.02)), float(np.sin(heading + i * 0.02)))
+            for i in range(num_agents)
+        ]
+        vel_history.append(step_vels)
+    
+    # 2 signals for transfer entropy
+    sig_0 = [float(np.sin(t * 0.1)) for t in range(steps)]
+    sig_1 = [float(np.sin(t * 0.1 - 0.05)) for t in range(steps)]
+    
+    metrics = detector.evaluate_swarm_trajectory(vel_history, [sig_0, sig_1])
+    
+    sim_res = SocialSimulationResult(
+        total_steps=steps,
+        num_agents=num_agents,
+        information_metrics=metrics,
+        mean_energy_history=[30.0] * steps,
+        polarization_history=[metrics.swarm_polarization] * steps,
+    )
+    
+    report = social_scientist_agent.analyze_social_dynamics(sim_res)
     return report.model_dump()
 
 
