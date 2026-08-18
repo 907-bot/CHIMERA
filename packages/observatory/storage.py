@@ -163,6 +163,7 @@ class ObservatoryStorageEngine:
 
         # High-performance tuple unpacking group-by loop
         states_dict: Dict[int, Dict[str, Any]] = {}
+        default_b = Boundary()
         for r in rows:
             w_id, step_val, t, dt, seed, cfg_hash, p_id, mass, radius, px, py, vx, vy, fx, fy = r
             if step_val not in states_dict:
@@ -176,29 +177,38 @@ class ObservatoryStorageEngine:
                     "particles": [],
                 }
 
-            p = Particle.model_construct(
-                id=p_id,
-                mass=mass,
-                radius=radius,
-                position=Vector2D.model_construct(x=px, y=py),
-                velocity=Vector2D.model_construct(x=vx, y=vy),
-                force=Vector2D.model_construct(x=fx, y=fy),
-            )
+            v_pos = object.__new__(Vector2D)
+            v_pos.__dict__ = {"x": px, "y": py}
+            v_vel = object.__new__(Vector2D)
+            v_vel.__dict__ = {"x": vx, "y": vy}
+            v_frc = object.__new__(Vector2D)
+            v_frc.__dict__ = {"x": fx, "y": fy}
+
+            p = object.__new__(Particle)
+            p.__dict__ = {
+                "id": p_id,
+                "mass": mass,
+                "radius": radius,
+                "position": v_pos,
+                "velocity": v_vel,
+                "force": v_frc,
+            }
             states_dict[step_val]["particles"].append(p)
 
         states = []
         for step_key in sorted(states_dict.keys()):
             data = states_dict[step_key]
-            state = WorldState.model_construct(
-                world_id=data["world_id"],
-                step=data["step"],
-                time=data["time"],
-                dt=data["dt"],
-                particles=data["particles"],
-                boundary=Boundary(),
-                seed=data["seed"],
-                config_hash=data["config_hash"],
-            )
+            state = object.__new__(WorldState)
+            state.__dict__ = {
+                "world_id": data["world_id"],
+                "step": data["step"],
+                "time": data["time"],
+                "dt": data["dt"],
+                "particles": data["particles"],
+                "boundary": default_b,
+                "seed": data["seed"],
+                "config_hash": data["config_hash"],
+            }
             states.append(state)
 
         return states

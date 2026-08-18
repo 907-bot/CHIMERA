@@ -15,7 +15,7 @@ in Phase 5+ when the graph scales beyond local memory.
 from __future__ import annotations
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional, Any, Literal
 
 try:
@@ -83,7 +83,7 @@ class HypothesisGraph:
                 node_type="world",
                 world_name=world_name,
                 description=description,
-                created_at=datetime.utcnow().isoformat(),
+                created_at=datetime.now(timezone.utc).isoformat(),
             )
         return node_id
 
@@ -109,7 +109,7 @@ class HypothesisGraph:
             solver=solver,
             r_squared=r_squared,
             status=status,
-            created_at=datetime.utcnow().isoformat(),
+            created_at=datetime.now(timezone.utc).isoformat(),
         )
         self.graph.add_edge(node_id, world_node, edge_type="derived_from")
         return node_id

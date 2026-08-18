@@ -14,7 +14,7 @@ Hierarchy:
 
 from __future__ import annotations
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional, Literal, Any
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -64,7 +64,7 @@ class BullArgument(BaseModel):
     predicted_generalisation: str
     """How the Bull agent claims this law will generalise to new worlds."""
 
-    created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
 # ---------------------------------------------------------------------------
@@ -109,7 +109,7 @@ class BearArgument(BaseModel):
     critical_flaw: str
     """The single most damaging argument against the hypothesis."""
 
-    created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
 # ---------------------------------------------------------------------------
@@ -159,7 +159,7 @@ class CounterfactualExperiment(BaseModel):
     r2_threshold_to_survive: float = Field(default=0.95, ge=0.0, le=1.0)
     """Minimum R² the hypothesis must achieve on perturbed world to survive."""
 
-    created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
 # ---------------------------------------------------------------------------
@@ -186,7 +186,7 @@ class ExperimentResult(BaseModel):
     """System-generated explanation of what the result means for the hypothesis."""
 
     run_duration_seconds: float
-    created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
 # ---------------------------------------------------------------------------
@@ -229,7 +229,7 @@ class ArbiterVerdict(BaseModel):
     reproducibility_score: float = Field(ge=0.0, le=1.0)
     """Fraction of counterfactual experiments the hypothesis survived."""
 
-    created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
 # ---------------------------------------------------------------------------
@@ -257,5 +257,5 @@ class DebateRecord(BaseModel):
     final_status: Literal["ACCEPTED", "REJECTED", "INCONCLUSIVE"]
     """Mirrors arbiter_verdict.verdict for quick lookup."""
 
-    created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     duration_seconds: float = 0.0

@@ -12,7 +12,7 @@ from __future__ import annotations
 import sqlite3
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional, Literal
 from packages.symbolic.hypothesis import Hypothesis, HypothesisParameters, PredictionMetrics
 
@@ -89,7 +89,7 @@ class HypothesisRegistry:
         Raises:
             ValueError: If hypothesis with same ID already exists.
         """
-        now = datetime.utcnow().isoformat()
+        now = datetime.now(timezone.utc).isoformat()
         params_json = json.dumps({
             "values": hypothesis.parameters.values,
             "uncertainties": hypothesis.parameters.uncertainties,
@@ -138,12 +138,15 @@ class HypothesisRegistry:
             metrics:               Updated prediction metrics (optional).
             falsification_evidence: Evidence string if FALSIFIED (optional).
         """
-        now = datetime.utcnow().isoformat()
+        if new_status not in ("VALIDATED", "FALSIFIED"):
+            raise ValueError(f"Invalid status transition to '{new_status}'. Allowed: 'VALIDATED', 'FALSIFIED'")
+
+        now = datetime.now(timezone.utc).isoformat()
         metrics_json = None
         if metrics:
             metrics_json = json.dumps(metrics.model_dump())
 
-        self.conn.execute(
+        cursor = self.conn.execute(
             """
             UPDATE hypotheses
             SET status = ?, metrics_json = ?, falsification_evidence = ?, updated_at = ?
@@ -151,6 +154,8 @@ class HypothesisRegistry:
             """,
             (new_status, metrics_json, falsification_evidence, now, hypothesis_id),
         )
+        if cursor.rowcount == 0:
+            raise KeyError(f"Hypothesis with id '{hypothesis_id}' not found in registry")
         self.conn.commit()
 
     def get_by_id(self, hypothesis_id: str) -> Optional[Hypothesis]:

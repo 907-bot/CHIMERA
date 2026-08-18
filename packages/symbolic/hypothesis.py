@@ -12,7 +12,7 @@ Per AGENTS.md Rule 6: Failed hypotheses MUST be retained in scientific records.
 
 from __future__ import annotations
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional, Any, Literal
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -77,7 +77,7 @@ class Hypothesis(BaseModel):
     falsification_evidence: Optional[str] = None
     """If FALSIFIED, human/system-readable explanation of counter-evidence."""
 
-    created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
     def with_metrics(self, metrics: PredictionMetrics) -> Hypothesis:
         """Return a new Hypothesis with updated prediction metrics."""

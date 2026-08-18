@@ -54,7 +54,7 @@ class SimRunResponse(BaseModel):
 
 @app.get("/health")
 def health_check():
-    return {"status": "ok", "version": "0.2a", "service": "chimera-observatory-api"}
+    return {"status": "ok", "version": "0.3", "service": "chimera-observatory-api"}
 
 
 @app.post("/api/v1/sim/run", response_model=SimRunResponse)
@@ -114,7 +114,7 @@ def get_trajectory(
     """Query trajectory frame slices from DuckDB columnar storage."""
     states = storage.query_trajectory_slice(world_id, start_step=start_step, end_step=end_step)
     if not states:
-        raise HTTPException(status_code=44, detail=f"No trajectory records found for world {world_id}")
+        raise HTTPException(status_code=404, detail=f"No trajectory records found for world {world_id}")
 
     return {
         "world_id": world_id,
@@ -231,8 +231,9 @@ def run_benchmark_world(world_name: str):
         "num_steps": int(len(blind_data["t"])),
         "t": blind_data["t"].tolist(),
         "x": blind_data["x"].tolist(),
-        "v": blind_data["v"].tolist(),
     }
+    if "v" in blind_data:
+        serialisable["v"] = blind_data["v"].tolist()
     if "a" in blind_data:
         serialisable["a"] = blind_data["a"].tolist()
     if "y" in blind_data:

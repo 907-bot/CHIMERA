@@ -35,6 +35,7 @@ class GravityForce(BaseForce):
         # Difference matrix delta[i, j] = pos[j] - pos[i]
         delta = pos[None, :, :] - pos[:, None, :]
         dist_sq = np.sum(delta ** 2, axis=-1) + self.softening ** 2
+        np.fill_diagonal(dist_sq, 1.0)
         inv_dist_cube = dist_sq ** (-1.5)
         np.fill_diagonal(inv_dist_cube, 0.0)
 

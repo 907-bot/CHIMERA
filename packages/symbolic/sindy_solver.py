@@ -197,8 +197,19 @@ class SINDySolver:
         world_name: str = blind_data["world_name"]
         t: np.ndarray = np.asarray(blind_data["t"], dtype=np.float64)
         x: np.ndarray = np.asarray(blind_data["x"], dtype=np.float64)
-        v: np.ndarray = np.asarray(blind_data["v"], dtype=np.float64)
-        a: np.ndarray = np.asarray(blind_data["a"], dtype=np.float64)
+        if "v" in blind_data:
+            v: np.ndarray = np.asarray(blind_data["v"], dtype=np.float64)
+        elif "vx" in blind_data:
+            v = np.asarray(blind_data["vx"], dtype=np.float64)
+        else:
+            v = np.gradient(x, t)
+
+        if "a" in blind_data:
+            a: np.ndarray = np.asarray(blind_data["a"], dtype=np.float64)
+        elif "ax" in blind_data:
+            a = np.asarray(blind_data["ax"], dtype=np.float64)
+        else:
+            a = np.gradient(v, t)
 
         N = len(x)
         n_train = int(N * self.train_ratio)
