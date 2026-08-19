@@ -1,1 +1,3 @@
-{}
+{
+  "tests/scientific/test_observatory_performance.py::test_observatory_100k_query_latency": true
+}
